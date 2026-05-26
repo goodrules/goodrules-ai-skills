@@ -111,7 +111,7 @@ Pick the model based on the task:
 |---|---|---|
 | Web search, current info | `gemini-3-flash-preview` | Fast, search-oriented |
 | Deep code analysis, architecture | `gemini-3.1-pro-preview` | Strongest reasoning |
-| Quick lookups, simple questions | `gemini-3.1-flash-lite-preview` | Lowest latency, cheapest |
+| Quick lookups, simple questions | `gemini-3.1-flash-lite` | Lowest latency, cheapest |
 | Complex multi-file review | `gemini-3.1-pro-preview` | Larger effective context |
 | Lightweight review, docs | `gemini-3-flash-preview` | Good balance of speed and quality |
 
