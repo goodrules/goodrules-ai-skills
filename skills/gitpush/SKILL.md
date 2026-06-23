@@ -29,10 +29,8 @@ Analyze the diff to write a clear, concise commit message:
 - Match the style of recent commits in the repo
 - Keep the first line under 72 characters
 - Add a body if the change is non-trivial
-- End with the co-author trailer:
-  ```
-  Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
-  ```
+- End with the co-author trailer the harness specifies for the current model
+  (model-agnostic fallback: `Co-Authored-By: Claude <noreply@anthropic.com>`)
 
 ### Step 3: Stage and commit
 
@@ -57,3 +55,8 @@ Only after the user approves:
 
 - Run `git push -u origin <branch>` (use `-u` to set upstream if needed)
 - Report the result — confirm success or surface any errors
+
+## Notes
+
+- Never use `--no-verify`. If a pre-commit hook fails, fix the underlying issue and create a **new** commit. Do not `--amend` a failed-hook commit — that commit did not happen.
+- Never force-push unless the user explicitly asks for it.

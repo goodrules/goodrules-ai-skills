@@ -1,22 +1,31 @@
 ---
 name: close
 description: >
-  End-of-session skill that summarizes work accomplished, updates SESSION_UPDATE.md
-  with current information, removes stale items, and generates next steps. Use this
-  skill whenever the user says "/close", "close the session", "wrap up", "end session",
-  "session update", or "update the session file". Also use when the user asks to
-  summarize what was done today or capture progress before ending work.
+  End-of-session skill that summarizes work accomplished, updates the project
+  worklog with current information, removes stale items, and generates next
+  steps. Use this skill whenever the user says "/close", "close the session",
+  "wrap up", "end session", "session update", or "update the session file".
+  Also use when the user asks to summarize what was done today or capture
+  progress before ending work.
 ---
 
 # Close Session
 
-Wrap up the current working session by producing an accurate, current SESSION_UPDATE.md at the project root.
+Wrap up the current working session by producing an accurate, current worklog file at the project root.
+
+## File location
+
+The worklog file is named `WORKLOG.md` at the project root by default. If a `WORKLOG.md` already exists, use it. If not, fall back in this order: `MEMORY.md` (legacy name), `STATUS.md`, `NOTES.md`. If none exist, create `WORKLOG.md`.
+
+The file is typically gitignored — the worklog is a developer-local running journal, not part of the shipped repo. Don't add it to git unless the project's existing convention does so.
+
+Throughout this skill, "the worklog" refers to whichever file is in use.
 
 ## Process
 
 ### Step 1: Read the existing file
 
-Read `SESSION_UPDATE.md` from the project root. Understand its current structure, what was previously accomplished, and what remaining items exist.
+Read the worklog from the project root. Understand its current structure, what was previously accomplished, and what remaining items exist.
 
 ### Step 2: Analyze the current session
 
@@ -43,7 +52,7 @@ Compare the existing "Remaining Items" against what was accomplished:
 
 ### Step 4: Write the updated file
 
-Rewrite `SESSION_UPDATE.md` with this structure:
+Rewrite the worklog file with this structure:
 
 ```markdown
 # Session Update — {date(s)}
@@ -75,10 +84,17 @@ Guidelines for writing:
 - Preserve any standing reference sections (like "Deployment Architecture" or "Security Posture") if they exist, updating them to reflect current state
 - Remove sections that are no longer relevant or accurate
 
-### Step 5: Confirm with the user
+### Step 5: Refresh the knowledge graph (only if `graphify-out/` exists)
+
+Check whether a `graphify-out/` directory exists at the project root. If it does **not**, skip this step entirely — do not build a graph, do not mention it.
+
+If `graphify-out/` **does** exist, the project maintains a graphify knowledge graph; refresh it so the codebase map reflects this session's changes. Invoke the graphify skill in incremental update mode (equivalent to `/graphify --update`) — it re-extracts only new/changed files. Honor any project-specific graphify flags defined in the project's CLAUDE.md (e.g. an `--obsidian`/`--obsidian-dir` export target). If the update fails, note it in the final summary and continue — a failed graph refresh must not block closing the session.
+
+### Step 6: Confirm with the user
 
 After writing the file, give the user a brief summary of:
 - How many items were added to "Accomplished"
 - How many remaining items were removed (completed)
 - How many new remaining items were added
 - Any notable changes to reference sections
+- Whether the knowledge graph was refreshed (only if Step 5 ran)
