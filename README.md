@@ -20,7 +20,8 @@ Then invoke by slash command (e.g. `/local-review`) or let Claude trigger it fro
 | `local-review` | Independent second-opinion review of a diff, file, plan, or UI screenshot from a **local** Gemma 4 model via Ollama. Read-only critique, zero API cost. |
 | `prd` + `prd-*` | Interview-style PRD authoring: an orchestrator plus four domain sub-skills that each own one section of a `PRD.md`. |
 | `project-ideation` | Socratic brainstorming that ends in a one-page project brief and rough roadmap. |
-| `close` | End-of-session worklog update and next-steps generation. |
+| `close` | End-of-session wrap-up. Writes a `worklog/` directory (`bugs.md`, `features.md`, `ideas.md`, `journal.md`), routing each finding to the right file and pruning stale entries. Migrates a legacy single-file `WORKLOG.md` on first run. |
+| `whats-next` | Reads the `worklog/` and recommends the 3–5 highest-priority next items, with reasoning. Read-only counterpart to `close`. |
 | `gitpush` | Staged-commit-then-push with an explicit approval gate. |
 | `gemini-second-opinion` | Independent read-only take from a Gemini agent via the Antigravity CLI. |
 

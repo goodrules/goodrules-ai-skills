@@ -41,10 +41,26 @@ The canonical schema lives in `skills/prd/SKILL.md` Step 4 and is referenced by 
 - **Open-ended sweep**: ask one or two questions at a time, in prose, and wait for each answer. Do **not** use `AskUserQuestion` here — these are meant to be open. Reject vague answers and re-prompt for a concrete noun/verb.
 - **Structured prompts**: use `AskUserQuestion` only for discrete, enumerable decisions (project type, auth model, MVP cut depth, etc.).
 
-Each interview skill ends by writing a named artifact to the project root (`PRD.md`, `SESSION_UPDATE.md`, a `*-brief.md`) and printing a short summary — not by leaving the result only in chat.
+Each interview skill ends by writing a named artifact to the project root (`PRD.md`, a `*-brief.md`) and printing a short summary — not by leaving the result only in chat.
+
+## The worklog contract (`close` + `whats-next`)
+
+Two skills share one on-disk structure at the *target project's* root (not this repo): a **`worklog/` directory**, typically gitignored.
+
+| File | Holds |
+|---|---|
+| `bugs.md` | `## Open` (High/Medium/Low), `## Ruled out`, `## Recently fixed` |
+| `features.md` | `## In progress`, `## Next up`, `## Backlog`, `## Shipped (recent)` |
+| `ideas.md` | `## Active exploration`, `## Someday`, `## Discarded` |
+| `journal.md` | `## Sessions` (last 3), `## Standing status` |
+
+- **`close`** is the sole writer. **`whats-next`** is read-only. Changing the schema means editing both in lockstep — they previously drifted (`close` could write `MEMORY.md`, which `whats-next` had no way to find).
+- **Routing is by decision test**, not vibes: bugs = "a behavior contradicts intent"; features = "I could write acceptance criteria today"; ideas = "I'd need a design conversation first". Work that is none of these (refactors, deploys, dep bumps) is *done work* and belongs in `journal.md`.
+- **`## Ruled out` and `## Discarded` are append-only.** They exist to stop re-litigation, so `whats-next` must never recommend from them.
+- **Bounded sections** (`## Sessions`, `## Recently fixed`, `## Shipped (recent)`) get pruned each run; git holds the history. `## Standing status` is updated in place and never pruned. These bounds are what keep the files from becoming the 992-line single file they replaced.
+- **`close` never edits CLAUDE.md.** When reference-shaped material (invariants, architectural rules) accumulates in the worklog, it *flags* it for promotion and stops there — a committed file that steers every future session is not something a wrap-up skill should write to.
+- **Legacy migration**: a root `WORKLOG.md`/`MEMORY.md`/`STATUS.md`/`NOTES.md` is split into the four files on `close`'s next run, behind an approval gate, with the original archived to `worklog/archive-WORKLOG.md` rather than deleted.
 
 ## Other standalone skills
-
-- **`close`** — rewrites the project worklog (`WORKLOG.md` by default, falling back to `MEMORY.md`/`STATUS.md`/`NOTES.md`) at the project root from the conversation; reconciles a "Remaining Items" list (remove completed, keep open, add new) and, only if `graphify-out/` exists, refreshes the knowledge graph.
 - **`gitpush`** — staged-commit-then-push with a hard gate: never push without explicit `AskUserQuestion` approval; stage files by name (never `git add -A`/`.`).
 - **`gemini-second-opinion`** — pure-prose skill (no helper script) that shells out to the Antigravity CLI (`agy --print`, headless) to get an independent read-only Gemini take, then has Claude synthesize it against its own analysis rather than passing it through. Documents the one quirk that matters: `agy --print` drops stdout on a non-TTY stdin, so calls always redirect `< /dev/null`.
