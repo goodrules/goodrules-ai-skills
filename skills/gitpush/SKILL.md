@@ -29,8 +29,7 @@ Analyze the diff to write a clear, concise commit message:
 - Match the style of recent commits in the repo
 - Keep the first line under 72 characters
 - Add a body if the change is non-trivial
-- End with the co-author trailer the harness specifies for the current model
-  (model-agnostic fallback: `Co-Authored-By: Claude <noreply@anthropic.com>`)
+- Do NOT add any co-author trailers or agent attributions — authorship belongs solely to the user
 
 ### Step 3: Stage and commit
 
