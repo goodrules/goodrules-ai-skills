@@ -15,105 +15,90 @@ description: >
 
 # Second Opinion via the Antigravity CLI
 
-Get an independent take from a headless Gemini agent (the Antigravity CLI,
-`agy`) and **synthesize** it against your own analysis. Claude owns reasoning,
-orchestration, and the final answer; `agy` supplies a second perspective. You
-present one coherent review with confidence signals — never a raw passthrough.
-
-`agy --print` runs a single prompt non-interactively and writes the response to
-stdout. With no `--dangerously-skip-permissions` flag it can't write files or
-run commands, so it stays effectively read-only — it reads what you give it and
-reasons.
+Get an independent take from a headless Gemini agent (`agy`, the Antigravity
+CLI) and **synthesize** it against your own analysis. You own the reasoning and
+the final answer; `agy` supplies one more perspective. Present one coherent
+review with confidence signals — never a raw passthrough.
 
 ## When to use
 
-Invoke a second opinion when:
-
 - **A second analytical perspective adds confidence** — code reviews, security
   audits, architecture decisions, debugging hypotheses.
-- **You're cross-checking your own work** — get an independent take before
-  presenting, then note agreement (high confidence) and divergence (needs eyes).
-- **The user explicitly asks** — "ask Gemini", "get a second opinion", "what
-  would another model say".
+- **You're cross-checking your own work** before presenting it.
+- **The user asks** — "ask Gemini", "get a second opinion", "what would another
+  model say".
 
-Do NOT invoke for: pure logic tasks with no external dependency, code already
-fully in context that needs no second reviewer, simple facts you can answer
+Skip it for pure logic with no external dependency, simple facts you can answer
 confidently, or when latency matters more than thoroughness.
-
-## Prerequisites
-
-- **`agy` installed and authenticated.** `agy models` should list Gemini models;
-  if it errors with an auth/sign-in message, the user needs to run `agy` once
-  interactively to sign in. If `agy` isn't on PATH, the Antigravity CLI isn't
-  installed.
 
 ## The invocation
 
-One command. Always redirect `< /dev/null` — in print mode `agy` drops stdout
-when stdin is a non-TTY (which it always is under a tool call), so without it the
-call hangs and returns nothing.
+`agy --print` runs a single prompt non-interactively and writes the response to
+stdout. Without `--dangerously-skip-permissions` it can't approve tool calls, so
+it stays effectively read-only — it reads what you give it and reasons.
 
 ```bash
-agy --model "Gemini 3.5 Flash (High)" --print-timeout 5m \
-  -p "Act as a senior security engineer. Review this for auth bugs:
+agy --model gemini-3.7-flash-high -p "Act as a senior security engineer. Review this for auth bugs:
 
-$(cat src/auth.py)" < /dev/null
+$(cat src/auth.py)"
 ```
 
 - `-p` / `--print` / `--prompt` takes the **prompt as its value** — keep it last.
-- stdout is the response text, nothing else. Diagnostics go to stderr; check the
-  exit code (non-zero = failure, e.g. auth or timeout — read stderr to see why).
+- stdout is the response text and nothing else; diagnostics go to stderr. Check
+  the exit code — non-zero means failure (auth, timeout), so read stderr to see why.
+- `--print-timeout` already defaults to 5m. Only pass it for a genuinely long job.
+- If a call ever returns empty stdout, retry with `< /dev/null` appended — some
+  builds drop output when stdin is an open pipe.
 
 ### Model selection
 
-`agy` names models by exact string (run `agy models` to see the live list). Pick
-by task weight:
+Pass the **slug**, not the display name — slugs are stable and shell-safe. Run
+`agy models` for the live list; it changes, so don't trust this table when a
+model name errors.
 
-| Tier | Exact `--model` name | Use for |
+| Tier | `--model` slug | Use for |
 |---|---|---|
-| Flash (default) | `Gemini 3.5 Flash (High)` | most reviews, the default |
-| Flash-lo | `Gemini 3.5 Flash (Low)` | trivial / cheap checks |
-| Pro | `Gemini 3.1 Pro (High)` | deep architecture / hard reasoning |
+| Flash (default) | `gemini-3.7-flash-high` | most reviews |
+| Flash-lo | `gemini-3.7-flash-low` | trivial / cheap checks |
+| Pro | `gemini-3.1-pro-high` | deep architecture, hard reasoning |
 
-### Role priming
+The `-high` / `-medium` / `-low` suffix *is* the reasoning effort — there's no
+separate flag to set alongside it.
 
-Print mode has no separate system-instructions flag, so **prime the role in the
-prompt itself** — lead with "Act as a …". Claude has the broader context; set the
-lens to match the task:
+### Prompting
 
-| Task | Role prefix |
-|---|---|
-| Code review | "Act as a senior software engineer performing a code review." |
-| Security audit | "Act as a senior security engineer." |
-| Architecture | "Act as a principal engineer evaluating system design." |
-| Test generation | "Act as a QA engineer writing comprehensive test cases." |
-| Debugging | "Act as a senior engineer performing root cause analysis." |
-| Prose / docs | "Act as a technical editor reviewing documentation." |
+Print mode has no system-instructions flag, so **prime the role in the prompt
+itself** — lead with "Act as a …", matched to the task: senior software engineer
+(code review), senior security engineer (audit), principal engineer
+(architecture), QA engineer (test generation), senior engineer doing root cause
+analysis (debugging), technical editor (prose).
 
-### Providing context
-
-Embed the relevant content directly in the prompt (`$(cat file)`, a pasted diff,
-bounded log tail). Keep it focused — a single file or diff beats a whole tree.
+Embed the content directly and **bound it** — one file or one diff beats a whole
+tree:
 
 ```bash
 # Review a diff
-git diff HEAD~1 | { agy --model "Gemini 3.5 Flash (High)" --print-timeout 5m \
-  -p "Act as a senior reviewer. Find bugs in this diff:
+agy --model gemini-3.7-flash-high -p "Act as a senior reviewer. Find bugs in this diff:
 
-$(cat)" < /dev/null; }
+$(git diff HEAD~1)"
 
 # Bound large inputs — never embed an unbounded file
-agy --model "Gemini 3.5 Flash (High)" --print-timeout 5m \
-  -p "Act as a senior engineer doing root cause analysis. Diagnose these errors:
+agy --model gemini-3.7-flash-high -p "Act as a senior engineer doing root cause analysis. Diagnose these errors:
 
-$(tail -n 200 error.log)" < /dev/null
+$(tail -n 200 error.log)"
 ```
 
 For a question spanning many files, point `agy` at the repo with `--add-dir
-<path>` so it reads files itself instead of you pasting them. Web/search tools
-need `--dangerously-skip-permissions` (print mode can't show approval prompts) —
-only add it when the task genuinely needs a tool, since it also grants write
-access; for plain read-and-reason second opinions, leave it off.
+<path>` so it reads files itself instead of you pasting them. Anything needing a
+real tool (web search) also needs `--dangerously-skip-permissions`, since print
+mode can't show approval prompts — that grants write access too, so leave it off
+for plain read-and-reason second opinions.
+
+## Prerequisites
+
+`agy models` should list Gemini models. An auth/sign-in error means the user
+needs to run `agy` once interactively to sign in; "command not found" means the
+Antigravity CLI isn't installed.
 
 ## Synthesis pattern
 
@@ -121,12 +106,11 @@ The value is comparing perspectives, not relaying a second output:
 
 1. **Form your own analysis first** — don't anchor on `agy`'s output.
 2. **Call `agy`** with a focused, role-primed prompt.
-3. **Compare and synthesize:**
-   - **Consensus** — both agree → high confidence, present as solid findings.
-   - **Claude only** — you found it, it didn't → medium confidence, with rationale.
-   - **Agent only** — it found it, you missed it → investigate before presenting.
-   - **Contradiction** — direct disagreement → flag for the user, both sides.
+3. **Compare:**
+   - **Both agree** → high confidence, present as solid findings.
+   - **You only** → medium confidence, give your rationale.
+   - **`agy` only** → investigate before presenting; don't relay it unverified.
+   - **Contradiction** → flag it for the user, with both sides.
 
-Present the synthesis — one coherent review with confidence signals — not two
-separate dumps. Don't treat `agy`'s output as ground truth; it's a second
-opinion.
+`agy` is a second opinion, not ground truth. Present one synthesized review, not
+two separate dumps.

@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> `AGENTS.md` is a symlink to this file, so Antigravity and other harnesses that look for `AGENTS.md` read the same guidance. There is one document; edit this one. Where the text names a Claude Code tool (`AskUserQuestion`) or path (`~/.claude/skills/`), read it as "the harness's equivalent".
+
 ## What this repo is
 
 A personal collection of Claude Code **skills**. There is no application, build step, test suite, or dependency manifest — every artifact is a markdown skill definition consumed by Claude Code at runtime. "Working in this codebase" means authoring or editing skills, not compiling or running code.
@@ -58,9 +60,10 @@ Two skills share one on-disk structure at the *target project's* root (not this 
 - **Routing is by decision test**, not vibes: bugs = "a behavior contradicts intent"; features = "I could write acceptance criteria today"; ideas = "I'd need a design conversation first". Work that is none of these (refactors, deploys, dep bumps) is *done work* and belongs in `journal.md`.
 - **`## Ruled out` and `## Discarded` are append-only.** They exist to stop re-litigation, so `whats-next` must never recommend from them.
 - **Bounded sections** (`## Sessions`, `## Recently fixed`, `## Shipped (recent)`) get pruned each run; git holds the history. `## Standing status` is updated in place and never pruned. These bounds are what keep the files from becoming the 992-line single file they replaced.
-- **`close` never edits CLAUDE.md.** When reference-shaped material (invariants, architectural rules) accumulates in the worklog, it *flags* it for promotion and stops there — a committed file that steers every future session is not something a wrap-up skill should write to.
+- **`close` never edits the agent instruction file** (`CLAUDE.md`, `AGENTS.md`, or the harness equivalent). When reference-shaped material (invariants, architectural rules) accumulates in the worklog, it *flags* it for promotion and stops there — a committed file that steers every future session is not something a wrap-up skill should write to.
 - **Legacy migration**: a root `WORKLOG.md`/`MEMORY.md`/`STATUS.md`/`NOTES.md` is split into the four files on `close`'s next run, behind an approval gate, with the original archived to `worklog/archive-WORKLOG.md` rather than deleted.
 
 ## Other standalone skills
 - **`gitpush`** — staged-commit-then-push with a hard gate: never push without explicit `AskUserQuestion` approval; stage files by name (never `git add -A`/`.`).
-- **`gemini-second-opinion`** — pure-prose skill (no helper script) that shells out to the Antigravity CLI (`agy --print`, headless) to get an independent read-only Gemini take, then has Claude synthesize it against its own analysis rather than passing it through. Documents the one quirk that matters: `agy --print` drops stdout on a non-TTY stdin, so calls always redirect `< /dev/null`.
+- **`local-forge` / `local-review`** — the two skills that ship a `scripts/` helper. Their SKILL.md must invoke the script by **absolute path** (`~/.claude/skills/<name>/scripts/...`), never `scripts/foo.sh` — at runtime the CWD is the target project, not the skill directory, so a relative path silently fails to resolve.
+- **`gemini-second-opinion`** — pure-prose skill (no helper script) that shells out to the Antigravity CLI (`agy --print`, headless) to get an independent read-only Gemini take, then has Claude synthesize it against its own analysis rather than passing it through. Two things keep it from rotting: it passes **model slugs** (`gemini-3.7-flash-high`), not display names, and it tells the model to run `agy models` for the live list rather than trusting the table in the skill. A `< /dev/null` redirect was previously mandatory on every call to work around dropped stdout on non-TTY stdin; that no longer reproduces, so it survives only as a one-line retry hint.

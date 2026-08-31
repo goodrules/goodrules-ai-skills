@@ -41,9 +41,17 @@ SYSTEM="You are a sharp, independent code/design reviewer giving a SECOND OPINIO
 
 if [[ -n "$IMAGE" ]]; then
   [[ -f "$IMAGE" ]] || { echo "No such image: $IMAGE" >&2; exit 1; }
-  B64="$(base64 -i "$IMAGE" | tr -d '\n')"
+  B64="$(base64 < "$IMAGE" | tr -d '\n')"
+  shopt -s nocasematch
+  case "$IMAGE" in
+    *.jpg|*.jpeg) MIME="image/jpeg";;
+    *.gif)        MIME="image/gif";;
+    *.webp)       MIME="image/webp";;
+    *)            MIME="image/png";;
+  esac
+  shopt -u nocasematch
   PAYLOAD="$(jq -n --arg model "$MODEL" --arg system "$SYSTEM" --arg focus "$FOCUS" \
-    --arg url "data:image/png;base64,$B64" \
+    --arg url "data:$MIME;base64,$B64" \
     '{model:$model, messages:[
        {role:"system", content:$system},
        {role:"user", content:[

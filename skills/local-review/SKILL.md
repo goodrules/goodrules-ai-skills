@@ -21,20 +21,22 @@ An independent reviewer running locally through Ollama. Its whole value is that 
 
 ## How to use it
 
-The script reads content from `--file`, `--image`, or stdin, plus an optional `--focus` describing what to look for.
+The script lives next to this SKILL.md, **not** in the project you're working in — invoke it by absolute path (`~/.claude/skills/local-review/scripts/review.sh` for the standard install). Set `RV=~/.claude/skills/local-review/scripts/review.sh` once per session and use `$RV` below.
+
+It reads content from `--file`, `--image`, or stdin, plus an optional `--focus` describing what to look for.
 
 ```bash
 # Review the staged diff for specific concerns
-git diff --cached | scripts/review.sh --focus "concurrency and error handling"
+git diff --cached | "$RV" --focus "concurrency and error handling"
 
 # Review a single file
-scripts/review.sh --file src/portfolio.py
+"$RV" --file src/portfolio.py
 
 # Second opinion on your own plan (pipe your plan text in)
-echo "$MY_PLAN" | scripts/review.sh --focus "flaws, missing steps, wrong assumptions"
+echo "$MY_PLAN" | "$RV" --focus "flaws, missing steps, wrong assumptions"
 
 # UI critique of a screenshot
-scripts/review.sh --image path/to/dashboard.png --focus "UX, hierarchy, accessibility"
+"$RV" --image path/to/dashboard.png --focus "UX, hierarchy, accessibility"
 ```
 
 ## How to treat the output

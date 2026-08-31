@@ -26,21 +26,23 @@ Complex reasoning, security-critical logic, subtle multi-file refactors, archite
 
 ## How to use it
 
+The script lives next to this SKILL.md, **not** in the project you're working in — invoke it by absolute path (`~/.claude/skills/local-forge/scripts/forge.sh` for the standard install). Set `FG=~/.claude/skills/local-forge/scripts/forge.sh` once per session and use `$FG` below.
+
 ```bash
 # Generate unit tests for a file
-scripts/forge.sh tests src/portfolio.py
+"$FG" tests src/portfolio.py
 
 # Draft docstrings for a file (outputs the full annotated file)
-scripts/forge.sh docs src/ingest.py
+"$FG" docs src/ingest.py
 
 # Draft a commit message from staged changes
-scripts/forge.sh commit
+"$FG" commit
 
 # Codebase question over many files (pipe context in)
-cat src/*.py | scripts/forge.sh ask "Where do we open DB sessions, and are any left unclosed?"
+cat src/*.py | "$FG" ask "Where do we open DB sessions, and are any left unclosed?"
 
 # Arbitrary prompt, optional piped context
-scripts/forge.sh raw "Convert this to Pydantic v2 style" < model.py
+"$FG" raw "Convert this to Pydantic v2 style" < model.py
 ```
 
 ## How to treat the output
