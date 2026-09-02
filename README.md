@@ -24,6 +24,8 @@ Then invoke by slash command (e.g. `/local-review`) or let Claude trigger it fro
 | `whats-next` | Reads the `worklog/` and recommends the 3–5 highest-priority next items, with reasoning. Read-only counterpart to `close`. |
 | `gitpush` | Staged-commit-then-push with an explicit approval gate. |
 | `gemini-second-opinion` | Independent read-only take from a Gemini agent via the Antigravity CLI. |
+| `grill-me` | Interactive idea narrowing: ask sharp questions, refuse vague answers, and produce a short commitment brief plus first concrete step. |
+| `find-skills` | Discover and install skills from the open agent skills ecosystem via `npx skills`. |
 
 ## Serving the local models with Ollama
 
