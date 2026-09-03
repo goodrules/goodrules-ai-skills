@@ -38,7 +38,7 @@ stdout. Without `--dangerously-skip-permissions` it can't approve tool calls, so
 it stays effectively read-only — it reads what you give it and reasons.
 
 ```bash
-agy --model gemini-3.7-flash-high -p "Act as a senior security engineer. Review this for auth bugs:
+agy --model gemini-3.8-flash-high -p "Act as a senior security engineer. Review this for auth bugs:
 
 $(cat src/auth.py)"
 ```
@@ -58,8 +58,8 @@ model name errors.
 
 | Tier | `--model` slug | Use for |
 |---|---|---|
-| Flash (default) | `gemini-3.7-flash-high` | most reviews |
-| Flash-lo | `gemini-3.7-flash-low` | trivial / cheap checks |
+| Flash (default) | `gemini-3.8-flash-high` | most reviews |
+| Flash-lo | `gemini-3.8-flash-low` | trivial / cheap checks |
 | Pro | `gemini-3.1-pro-high` | deep architecture, hard reasoning |
 
 The `-high` / `-medium` / `-low` suffix *is* the reasoning effort — there's no
@@ -78,12 +78,12 @@ tree:
 
 ```bash
 # Review a diff
-agy --model gemini-3.7-flash-high -p "Act as a senior reviewer. Find bugs in this diff:
+agy --model gemini-3.8-flash-high -p "Act as a senior reviewer. Find bugs in this diff:
 
 $(git diff HEAD~1)"
 
 # Bound large inputs — never embed an unbounded file
-agy --model gemini-3.7-flash-high -p "Act as a senior engineer doing root cause analysis. Diagnose these errors:
+agy --model gemini-3.8-flash-high -p "Act as a senior engineer doing root cause analysis. Diagnose these errors:
 
 $(tail -n 200 error.log)"
 ```
